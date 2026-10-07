@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,400&display=swap');
+
+:root {
+    --bg-warm: #FAF7F2;
+    --bg-card: #FFFFFF;
+    /* Tiffany Blue Primary Accent */
+    --accent-tiffany: #0ABAB5;
+    --accent-tiffany-hover: #089A96;
+    --accent-tiffany-light: #E6F8F7;
+    --accent-terracotta: #C85A54;
+    --accent-clay: #B07D62;
+    --accent-sage: #849883;
+    --accent-honey: #E9C46A;
+    --text-primary: #262422;
+    --text-secondary: #716C66;
+    --text-muted: #A39E98;
+    --border-warm: #EDE7DE;
+    --shadow-soft: 0 10px 30px -5px rgba(60, 45, 35, 0.06), 0 4px 10px -2px rgba(60, 45, 35, 0.03);
+    --shadow-hover: 0 20px 35px -8px rgba(60, 45, 35, 0.12), 0 8px 16px -4px rgba(60, 45, 35, 0.06);
+    --shadow-tiffany: 0 4px 14px rgba(10, 186, 181, 0.28);
+}
+
+/* Strict sharp corners everywhere */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-warm);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.font-editorial {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #F2EDE4;
+}
+::-webkit-scrollbar-thumb {
+    background: #D5CCC0;
+    border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #B9AE9F;
+}
+
+/* Glassmorphism & Sharp Cards */
+.card-soft {
+    background: var(--bg-card);
+    border: 1px solid var(--border-warm);
+    border-radius: 0;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.card-soft:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+/* Sticky notes */
+.sticky-paper {
+    position: relative;
+    border-radius: 0;
+    box-shadow: 2px 10px 24px -4px rgba(60, 45, 30, 0.12), 0 2px 6px -1px rgba(60, 45, 30, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.sticky-paper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 0;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Canvas Area */
+.canvas-container {
+    position: relative;
+    min-height: 780px;
+    width: 100%;
+    border-radius: 0;
+    background-color: #FAF6F0;
+    background-image: radial-gradient(#E2DAD0 1.2px, transparent 1.2px);
+    background-size: 24px 24px;
+    overflow: hidden;
+    user-select: none;
+    border: 1px solid var(--border-warm);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* Draggable Element in Canvas */
+.canvas-card {
+    position: absolute;
+    cursor: grab;
+    border-radius: 0;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+    user-select: none;
+}
+.canvas-card:active {
+    cursor: grabbing;
+}
+.canvas-card.is-dragging {
+    opacity: 0.92;
+    box-shadow: 0 25px 40px -10px rgba(40, 25, 15, 0.25) !important;
+    transform: scale(1.02) rotate(-1deg);
+    z-index: 9999 !important;
+}
+
+/* Color Palette Swatch */
+.palette-swatch {
+    border-radius: 0;
+    transition: transform 0.18s ease;
+    cursor: pointer;
+}
+.palette-swatch:hover {
+    transform: scale(1.1);
+    z-index: 10;
+}
+
+/* Tiffany Accent Pin Button */
+.btn-pin {
+    background-color: var(--accent-tiffany);
+    color: white;
+    font-weight: 600;
+    border-radius: 0;
+    padding: 10px 22px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-tiffany);
+}
+.btn-pin:hover {
+    background-color: var(--accent-tiffany-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(10, 186, 181, 0.42);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    background-color: rgba(38, 36, 34, 0.45);
+    backdrop-filter: blur(6px);
+}
+
+/* Animations */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+.animate-enter {
+    animation: fadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

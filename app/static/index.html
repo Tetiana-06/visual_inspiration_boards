@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspiration Boards — Платформа візуальних дощок</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                borderRadius: {
+                    'none': '0px',
+                    'sm': '0px',
+                    DEFAULT: '0px',
+                    'md': '0px',
+                    'lg': '0px',
+                    'xl': '0px',
+                    '2xl': '0px',
+                    '3xl': '0px',
+                    'full': '0px',
+                },
+                extend: {
+                    colors: {
+                        pin: {
+                            DEFAULT: '#0ABAB5',
+                            hover: '#089A96',
+                            light: '#E6F8F7'
+                        },
+                        tiffany: {
+                            DEFAULT: '#0ABAB5',
+                            hover: '#089A96',
+                            light: '#E6F8F7'
+                        },
+                        warm: {
+                            50: '#FAF8F5',
+                            100: '#F4ECE4',
+                            200: '#E8DCCF',
+                            300: '#D5C4B1',
+                            700: '#524942',
+                            800: '#3D352F',
+                            900: '#26221E'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#FAF8F5] text-stone-800">
+
+    <!-- Top Navigation (Tiffany / Aesthetic Vibe, Sharp Corners) -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-200/60 px-6 py-3.5 transition-all">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <!-- Brand -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showGalleryView()">
+                <div class="w-10 h-10 bg-pin flex items-center justify-center text-white shadow-md shadow-pin/30">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-stone-900 leading-none">Inspiration Boards</h1>
+                </div>
+            </div>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3">
+                <!-- Create Board Button -->
+                <button onclick="openCreateBoardModal()" class="btn-pin flex items-center gap-2 text-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Створити дошку</span>
+                </button>
+
+                <!-- User Profile (Gray silhouette of head and shoulders, sharp square container) -->
+                <div class="flex items-center gap-2 pl-2 border-l border-stone-200">
+                    <div id="currentUserAvatarBtn" onclick="switchUser()" 
+                         title="Користувач: Тетяна Шостак (натисніть для зміни на Наталія Шостак)" 
+                         class="w-10 h-10 bg-stone-200 hover:bg-stone-300 ring-1 ring-stone-300/80 flex items-center justify-center text-stone-500 hover:text-stone-700 shadow-sm cursor-pointer transition-all">
+                        <!-- Silhouette of head and shoulders -->
+                        <svg class="w-6 h-6 text-stone-500 translate-y-0.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+        <!-- VIEW 1: BOARDS GALLERY -->
+        <section id="galleryView" class="space-y-6">
+            <!-- Gallery Header & Hero -->
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-stone-200/70">
+                <div>
+                    <h2 class="text-3xl font-bold font-editorial text-stone-900 tracking-tight">Ваші естетичні простори</h2>
+                    <p class="text-stone-700 text-sm mt-1">Дошки візуального натхнення, стилістичні добірки та дизайн-концепції</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="px-4 py-2 text-sm font-semibold bg-stone-900 text-white shadow-sm">Всі дошки</button>
+                </div>
+            </div>
+
+            <!-- Boards Masonry Grid -->
+            <div id="boardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Boards dynamically loaded here without element counters -->
+            </div>
+        </section>
+
+        <!-- VIEW 2: INTERACTIVE CANVAS STUDIO -->
+        <section id="canvasView" class="hidden space-y-4">
+            <!-- Studio Toolbar & Board Details -->
+            <div class="bg-white p-4 sm:p-5 shadow-sm border border-stone-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="showGalleryView()" class="p-2.5 hover:bg-stone-100 text-stone-600 transition-colors" title="Назад до дощок">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <h2 id="currentBoardTitle" class="text-xl sm:text-2xl font-bold font-editorial text-stone-900">Заголовок дошки</h2>
+                            <span id="boardVersionBadge" class="text-[11px] font-semibold px-2.5 py-0.5 bg-teal-50 text-teal-700 border border-teal-200/70" title="Версія для Optimistic Concurrency Control">
+                                v1
+                            </span>
+                        </div>
+                        <p id="currentBoardDesc" class="text-xs sm:text-sm text-stone-700 line-clamp-1 mt-0.5">Опис концепції та настрій...</p>
+                    </div>
+                </div>
+
+                <!-- Canvas Control Actions -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Add Note -->
+                    <button onclick="openAddElementModal('note')" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold border border-amber-200/60 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="sticky-note" class="w-4 h-4"></i>
+                        <span>+ Стікер</span>
+                    </button>
+
+                    <!-- Add Image -->
+                    <button onclick="openAddElementModal('image')" class="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-semibold border border-teal-200/60 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="image" class="w-4 h-4"></i>
+                        <span>+ Фото</span>
+                    </button>
+
+                    <!-- Add Palette -->
+                    <button onclick="openAddElementModal('palette')" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-200/60 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="palette" class="w-4 h-4"></i>
+                        <span>+ Палітра</span>
+                    </button>
+
+                    <!-- Add Sticker Quote -->
+                    <button onclick="openAddElementModal('sticker')" class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-semibold border border-purple-200/60 flex items-center gap-1.5 transition-all">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>+ Цитата</span>
+                    </button>
+
+                    <div class="h-6 w-px bg-stone-200 mx-1"></div>
+
+                    <!-- Batch Sync Button -->
+                    <button id="batchSaveBtn" onclick="saveCanvasBatch()" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 transition-all">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span id="batchSaveBtnText">Зберегти канвас (Batch)</span>
+                    </button>
+
+                    <!-- Export Snapshot -->
+                    <button onclick="exportCurrentBoard()" class="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-all flex items-center gap-1.5" title="Експорт JSON (High-Load Scenario)">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Експорт</span>
+                    </button>
+
+                    <!-- Collaborators -->
+                    <button onclick="openCollaboratorsModal()" class="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span id="collabsCountBadge">2</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workspace Note Hint (without element count) -->
+            <div class="flex items-center text-xs text-stone-600 px-2">
+                <span class="flex items-center gap-1.5">
+                    <i data-lucide="mouse-pointer" class="w-3.5 h-3.5 text-stone-600"></i>
+                    <span>Перетягуйте картки мишкою по канвасу. Коли завершите розстановку, натисніть <b>"Зберегти канвас (Batch)"</b>.</span>
+                </span>
+            </div>
+
+            <!-- The Infinite 2D Moodboard Canvas -->
+            <div id="moodboardCanvas" class="canvas-container relative" style="height: 760px;">
+                <!-- Canvas elements rendered dynamically -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: CREATE BOARD -->
+    <div id="createBoardModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-enter">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 bg-teal-50 text-pin flex items-center justify-center">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-xl font-bold font-editorial text-stone-900">Нова дошка натхнення</h3>
+                </div>
+                <button onclick="closeModal('createBoardModal')" class="text-stone-600 hover:text-stone-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="createBoardForm" onsubmit="handleCreateBoard(event)" class="space-y-4 mt-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">Назва дошки *</label>
+                    <input id="newBoardTitle" type="text" required placeholder="наприклад, Scandinavian Living Room & Light" 
+                           class="w-full px-4 py-2.5 border border-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-400 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">Концепт / Опис</label>
+                    <textarea id="newBoardDesc" rows="3" placeholder="Опишіть настрій, текстури, мету проєкту..." 
+                              class="w-full px-4 py-2.5 border border-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-400 text-sm resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-2">Відтінок полотна (Вайб)</label>
+                    <div class="flex items-center gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="boardBg" value="#FAF8F5" checked class="peer sr-only">
+                            <div class="w-8 h-8 bg-[#FAF8F5] border-2 border-stone-300 peer-checked:border-stone-900 shadow-sm" title="Warm Linen"></div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="boardBg" value="#F5EFE6" class="peer sr-only">
+                            <div class="w-8 h-8 bg-[#F5EFE6] border-2 border-stone-300 peer-checked:border-stone-900 shadow-sm" title="Alabaster Sand"></div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="boardBg" value="#FAF0EE" class="peer sr-only">
+                            <div class="w-8 h-8 bg-[#FAF0EE] border-2 border-stone-300 peer-checked:border-stone-900 shadow-sm" title="Blush Terracotta"></div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="boardBg" value="#EEF3EC" class="peer sr-only">
+                            <div class="w-8 h-8 bg-[#EEF3EC] border-2 border-stone-300 peer-checked:border-stone-900 shadow-sm" title="Sage Mist"></div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="boardBg" value="#F3EFF8" class="peer sr-only">
+                            <div class="w-8 h-8 bg-[#F3EFF8] border-2 border-stone-300 peer-checked:border-stone-900 shadow-sm" title="Lavender Fog"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-stone-100">
+                    <button type="button" onclick="closeModal('createBoardModal')" class="px-5 py-2.5 text-stone-600 hover:text-stone-900 text-sm font-medium">Скасувати</button>
+                    <button type="submit" class="btn-pin text-sm">Створити простір</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD CANVAS ELEMENT -->
+    <div id="addElementModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-enter">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-100">
+                <div class="flex items-center gap-2.5">
+                    <div id="addElementIcon" class="w-8 h-8 bg-teal-50 text-pin flex items-center justify-center">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </div>
+                    <h3 id="addElementModalTitle" class="text-xl font-bold font-editorial text-stone-900">Додати елемент</h3>
+                </div>
+                <button onclick="closeModal('addElementModal')" class="text-stone-600 hover:text-stone-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Dynamic Form based on Element Type -->
+            <form id="addElementForm" onsubmit="handleCreateElement(event)" class="space-y-4 mt-5">
+                <input type="hidden" id="elTypeInput" value="note">
+
+                <!-- NOTE FORM -->
+                <div id="formSectionNote" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">Заголовок нотатки</label>
+                        <input id="noteTitle" type="text" placeholder="наприклад, Акцент на текстурах" class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">Текст нотатки *</label>
+                        <textarea id="noteText" rows="3" required placeholder="Напишіть свою думку або стилістичну підказку..." class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1.5">Колір стікера</label>
+                        <div class="flex items-center gap-2">
+                            <label><input type="radio" name="noteColor" value="#FEF3C7" checked class="peer sr-only"><span class="block w-7 h-7 bg-[#FEF3C7] border-2 border-stone-300 peer-checked:ring-2 peer-checked:ring-teal-500 cursor-pointer"></span></label>
+                            <label><input type="radio" name="noteColor" value="#FEE2E2" class="peer sr-only"><span class="block w-7 h-7 bg-[#FEE2E2] border-2 border-stone-300 peer-checked:ring-2 peer-checked:ring-teal-500 cursor-pointer"></span></label>
+                            <label><input type="radio" name="noteColor" value="#E0F2FE" class="peer sr-only"><span class="block w-7 h-7 bg-[#E0F2FE] border-2 border-stone-300 peer-checked:ring-2 peer-checked:ring-teal-500 cursor-pointer"></span></label>
+                            <label><input type="radio" name="noteColor" value="#DCFCE7" class="peer sr-only"><span class="block w-7 h-7 bg-[#DCFCE7] border-2 border-stone-300 peer-checked:ring-2 peer-checked:ring-teal-500 cursor-pointer"></span></label>
+                            <label><input type="radio" name="noteColor" value="#F3E8FF" class="peer sr-only"><span class="block w-7 h-7 bg-[#F3E8FF] border-2 border-stone-300 peer-checked:ring-2 peer-checked:ring-teal-500 cursor-pointer"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IMAGE FORM -->
+                <div id="formSectionImage" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">Назва / Підпис</label>
+                        <input id="imageTitle" type="text" placeholder="наприклад, Архітектурна арка та тіні" class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">URL зображення *</label>
+                        <input id="imageUrl" type="url" placeholder="https://images.unsplash.com/..." class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    </div>
+                    <!-- Aesthetic Presets -->
+                    <div>
+                        <span class="block text-xs font-semibold text-stone-700 mb-1.5">Швидкі естетичні пресети:</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="selectImagePreset('https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&auto=format&fit=crop&q=80', 'Beige Minimal Living')" class="text-xs p-1.5 border border-stone-200 hover:border-pin text-stone-600 line-clamp-1 text-left">🛋️ Затишна кімната</button>
+                            <button type="button" onclick="selectImagePreset('https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80', 'Botanical Still Life')" class="text-xs p-1.5 border border-stone-200 hover:border-pin text-stone-600 line-clamp-1 text-left">🎨 Ботаніка & Арт</button>
+                            <button type="button" onclick="selectImagePreset('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80', 'Minimal Styling')" class="text-xs p-1.5 border border-stone-200 hover:border-pin text-stone-600 line-clamp-1 text-left">👗 Фактура тканини</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PALETTE FORM -->
+                <div id="formSectionPalette" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">Назва палітри *</label>
+                        <input id="paletteTitle" type="text" placeholder="наприклад, Terracotta & Desert Sand" class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">5 HEX кольорів (через кому)</label>
+                        <input id="paletteColors" type="text" value="#EDE0D4, #DDB892, #B08968, #7F5539, #9C6644" class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    </div>
+                </div>
+
+                <!-- STICKER FORM -->
+                <div id="formSectionSticker" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">Цитата / Стікер *</label>
+                        <input id="stickerText" type="text" placeholder="✨ Досконалість у деталях" class="w-full px-4 py-2.5 border border-stone-200 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-stone-700 mb-1">Emoji значок</label>
+                        <input id="stickerEmoji" type="text" value="✨" class="w-20 px-3 py-2 border border-stone-200 text-center text-lg">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end gap-3 border-t border-stone-100">
+                    <button type="button" onclick="closeModal('addElementModal')" class="px-5 py-2.5 text-stone-600 hover:text-stone-900 text-sm font-medium">Скасувати</button>
+                    <button type="submit" class="btn-pin text-sm">Додати на полотно</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: EXPORT JSON (High-Load Scenario Preview) -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-enter">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 bg-teal-50 text-pin flex items-center justify-center">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold font-editorial text-stone-900">Експорт знімка дошки</h3>
+                        <p class="text-xs text-stone-600">Специфікація пікового навантаження (High-Load Snapshot serialization)</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('exportModal')" class="text-stone-600 hover:text-stone-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="mt-4 space-y-3">
+                <div id="exportSummaryStats" class="grid grid-cols-3 gap-3 p-3 bg-stone-50 border border-stone-200 text-xs">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="relative">
+                    <pre id="exportJsonCode" class="bg-stone-900 text-teal-300 p-4 text-xs overflow-x-auto max-h-72 font-mono"></pre>
+                    <button onclick="copyExportJson()" class="absolute top-3 right-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium flex items-center gap-1">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Копіювати JSON</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-stone-100 mt-4">
+                <button onclick="downloadExportJson()" class="btn-pin text-sm flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Завантажити файл .json</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: COLLABORATORS -->
+    <div id="collabsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-overlay">
+        <div class="bg-white max-w-md w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-enter">
+            <div class="flex items-center justify-between pb-4 border-b border-stone-100">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 bg-teal-50 text-pin flex items-center justify-center">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-xl font-bold font-editorial text-stone-900">Учасники дошки</h3>
+                </div>
+                <button onclick="closeModal('collabsModal')" class="text-stone-600 hover:text-stone-600 p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div id="collaboratorsList" class="my-4 space-y-2 max-h-60 overflow-y-auto">
+                <!-- Collaborators rendered here -->
+            </div>
+
+            <form id="addCollabForm" onsubmit="handleAddCollaborator(event)" class="pt-3 border-t border-stone-100 flex items-center gap-2">
+                <select id="newCollabUserId" class="flex-1 px-3 py-2 text-xs border border-stone-200 bg-white">
+                    <option value="1">Тетяна Шостак (ID: 1)</option>
+                    <option value="2">Наталія Шостак (ID: 2)</option>
+                </select>
+                <select id="newCollabRole" class="px-3 py-2 text-xs border border-stone-200 bg-white">
+                    <option value="EDITOR">EDITOR</option>
+                    <option value="VIEWER">VIEWER</option>
+                </select>
+                <button type="submit" class="px-3 py-2 bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800">
+                    + Додати
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
