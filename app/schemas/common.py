@@ -8,6 +8,7 @@ from app.schemas.canvas_element import CanvasElementRead
 class HealthResponse(BaseModel):
     status: str
     version: str
+    instance_id: str
     database: str
     redis: str
     timestamp: datetime

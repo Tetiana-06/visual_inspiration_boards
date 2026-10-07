@@ -20,7 +20,7 @@ services:
     networks:
       - app_network
 
-  # In-memory Cache & Stateless Layer
+  # Centralized In-memory Cache & Distributed State Layer (Shared by all backend nodes)
   redis:
     image: redis:7-alpine
     container_name: vib_redis
@@ -37,14 +37,15 @@ services:
     networks:
       - app_network
 
-  # FastAPI Backend Service (Stateless Application)
-  backend:
+  # Stateless Backend Node 1 (Lab 2: Interchangeable Worker 1)
+  backend-1:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: vib_backend
+    container_name: vib_backend_1
     restart: unless-stopped
     environment:
+      - INSTANCE_ID=backend-instance-1
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/visual_boards
       - REDIS_URL=redis://redis:6379/0
       - DEBUG=true
@@ -53,12 +54,38 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./app:/app/app
     expose:
       - "8000"
     networks:
       - app_network
 
-  # Reverse Proxy & Load Balancer
+  # Stateless Backend Node 2 (Lab 2: Interchangeable Worker 2)
+  backend-2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: vib_backend_2
+    restart: unless-stopped
+    environment:
+      - INSTANCE_ID=backend-instance-2
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/visual_boards
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    expose:
+      - "8000"
+    networks:
+      - app_network
+
+  # Reverse Proxy & Round-Robin Load Balancer (No Sticky Sessions)
   nginx:
     image: nginx:alpine
     container_name: vib_nginx
@@ -69,7 +96,8 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend
+      - backend-1
+      - backend-2
     networks:
       - app_network
 

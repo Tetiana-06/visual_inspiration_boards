@@ -56,7 +56,15 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Instance-ID"],
 )
+
+# Stateless Node Identification Middleware (Lab 2)
+@app.middleware("http")
+async def add_instance_id_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Instance-ID"] = settings.INSTANCE_ID
+    return response
 
 # Custom domain exception handler
 @app.exception_handler(DomainException)

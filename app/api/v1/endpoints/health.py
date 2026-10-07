@@ -33,6 +33,7 @@ async def health_check(
     return HealthResponse(
         status=overall_status,
         version=settings.VERSION,
+        instance_id=settings.INSTANCE_ID,
         database=db_status,
         redis=redis_status,
         timestamp=datetime.now(timezone.utc),
