@@ -9,6 +9,7 @@ from app.models.collaborator import BoardCollaborator
 from app.models.user import User
 from app.schemas.collaborator import CollaboratorCreate, CollaboratorRead
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.redis import cache, board_cache_key
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,7 @@ class CollaboratorService:
         if existing:
             existing.role = collab_in.role
             await db.commit()
+            await cache.delete(board_cache_key(board_id))  # співавтори входять у кеш дошки
             await db.refresh(existing)
             return CollaboratorRead(
                 id=existing.id,
@@ -83,6 +85,7 @@ class CollaboratorService:
         )
         db.add(collab)
         await db.commit()
+        await cache.delete(board_cache_key(board_id))
         await db.refresh(collab)
 
         return CollaboratorRead(
@@ -117,4 +120,5 @@ class CollaboratorService:
 
         await db.delete(collab)
         await db.commit()
+        await cache.delete(board_cache_key(board_id))
         return True

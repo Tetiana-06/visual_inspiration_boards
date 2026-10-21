@@ -13,7 +13,7 @@ from app.schemas.canvas_element import (
     BatchCanvasElementResponse,
 )
 from app.core.exceptions import NotFoundError, ConcurrencyConflictError
-from app.core.redis import cache
+from app.core.redis import cache, board_cache_key
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class ElementService:
         await db.commit()
         await db.refresh(element)
 
-        await cache.delete(f"board:{board_id}")
+        await cache.delete(board_cache_key(board_id))
         return element
 
     @staticmethod
@@ -96,7 +96,7 @@ class ElementService:
         await db.commit()
         await db.refresh(element)
 
-        await cache.delete(f"board:{board_id}")
+        await cache.delete(board_cache_key(board_id))
         return element
 
     @staticmethod
@@ -112,7 +112,7 @@ class ElementService:
         board.version += 1
         await db.commit()
 
-        await cache.delete(f"board:{board_id}")
+        await cache.delete(board_cache_key(board_id))
         return True
 
     @staticmethod
@@ -182,7 +182,7 @@ class ElementService:
             await db.refresh(el)
 
         # Invalidate cache
-        await cache.delete(f"board:{board_id}")
+        await cache.delete(board_cache_key(board_id))
 
         return BatchCanvasElementResponse(
             updated_count=len(saved_elements),

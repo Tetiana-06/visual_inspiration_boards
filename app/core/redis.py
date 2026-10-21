@@ -7,71 +7,73 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+def board_cache_key(board_id: int) -> str:
+    """Lab 4: ключ кешу деталей дошки. Шаблон: <app>:<entity>:<id>:<view>."""
+    return f"vib:board:{board_id}:detail"
+
+
 class CacheClient:
+    """
+    Клієнт спільного Redis для всіх backend-інстансів.
+    Fallback (Lab 4): якщо Redis недоступний, кожен метод повертає None / нічого не робить —
+    запит обслуговується напряму з БД (Graceful Degradation). Локальної пам'яті немає,
+    інакше вузли бачили б різні дані.
+    """
+
     def __init__(self):
         self._redis: Optional[aioredis.Redis] = None
-        self._connected: bool = False
-        self._in_memory_fallback: dict[str, str] = {}
 
     async def connect(self):
         if not settings.REDIS_ENABLED:
             return
-        try:
-            self._redis = aioredis.from_url(
-                settings.REDIS_URL,
-                decode_responses=True,
-                socket_connect_timeout=1.5,
-            )
-            # Test connection
-            await self._redis.ping()
-            self._connected = True
+        # Клієнт підключається ліниво й сам перепідключається, коли Redis повертається
+        self._redis = aioredis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=0.5,  # не чекаємо мертвий Redis довше 0.5 с
+            socket_timeout=0.5,
+        )
+        if await self.ping():
             logger.info("Connected to Redis successfully.")
-        except Exception as e:
-            logger.warning(
-                f"Redis unavailable ({e}). Using in-memory fallback for caching."
-            )
-            self._connected = False
+        else:
+            logger.warning("Redis unavailable. Working directly with the database.")
 
     async def close(self):
-        if self._redis and self._connected:
-            await self._redis.close()
+        if self._redis:
+            await self._redis.aclose()
 
     async def get_json(self, key: str) -> Optional[Any]:
+        if not self._redis:
+            return None
         try:
-            if self._connected and self._redis:
-                val = await self._redis.get(key)
-            else:
-                val = self._in_memory_fallback.get(key)
-            if val:
-                return json.loads(val)
+            val = await self._redis.get(key)
+            return json.loads(val) if val else None
         except Exception as e:
-            logger.error(f"Error reading cache key {key}: {e}")
-        return None
+            logger.warning(f"CACHE BYPASS get {key}: Redis unavailable ({e})")
+            return None
 
-    async def set_json(self, key: str, value: Any, ttl: int = 300):
+    async def set_json(self, key: str, value: Any, ttl: int):
+        if not self._redis:
+            return
         try:
-            serialized = json.dumps(value, default=str)
-            if self._connected and self._redis:
-                await self._redis.set(key, serialized, ex=ttl)
-            else:
-                self._in_memory_fallback[key] = serialized
+            await self._redis.set(key, json.dumps(value, default=str), ex=ttl)  # ex = TTL у секундах
         except Exception as e:
-            logger.error(f"Error setting cache key {key}: {e}")
+            logger.warning(f"CACHE BYPASS set {key}: Redis unavailable ({e})")
 
     async def delete(self, key: str):
+        if not self._redis:
+            return
         try:
-            if self._connected and self._redis:
-                await self._redis.delete(key)
-            else:
-                self._in_memory_fallback.pop(key, None)
+            await self._redis.delete(key)
+            logger.info(f"CACHE INVALIDATE {key}")
         except Exception as e:
-            logger.error(f"Error deleting cache key {key}: {e}")
+            logger.warning(f"CACHE BYPASS delete {key}: Redis unavailable ({e})")
 
     async def ping(self) -> bool:
-        try:
-            if self._connected and self._redis:
-                return await self._redis.ping()
+        if not self._redis:
             return False
+        try:
+            return await self._redis.ping()
         except Exception:
             return False
 

@@ -27,6 +27,9 @@ class Settings(BaseSettings):
 
     # Lab 3: штучна затримка кожного запиту (мс) — імітація "повільного" вузла
     ARTIFICIAL_DELAY_MS: int = 0
+
+    # Lab 4: TTL кешу деталей дошки (с). Свіжість гарантує інвалідація, TTL — страховка
+    BOARD_CACHE_TTL: int = 300
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
