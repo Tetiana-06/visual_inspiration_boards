@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     REDIS_ENABLED: bool = True
     
+    # Instance identification for stateless multi-node scaling (Lab 2)
+    INSTANCE_ID: str = os.getenv("INSTANCE_ID", "backend-local")
+
+    # Lab 3: штучна затримка кожного запиту (мс) — імітація "повільного" вузла
+    ARTIFICIAL_DELAY_MS: int = 0
+    
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
     
