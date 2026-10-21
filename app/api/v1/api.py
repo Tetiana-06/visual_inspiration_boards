@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import boards, elements, collaborators, users, health
+from app.api.v1.endpoints import boards, elements, collaborators, users, health, lab
 
 api_router = APIRouter()
 
@@ -8,3 +8,4 @@ api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(boards.router, prefix="/boards", tags=["Boards"])
 api_router.include_router(elements.router, prefix="/boards", tags=["Canvas Elements"])
 api_router.include_router(collaborators.router, prefix="/boards", tags=["Collaborators"])
+api_router.include_router(lab.router, prefix="/lab", tags=["Lab 3: Load Balancing"])

@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 import logging
 from pathlib import Path
@@ -11,6 +12,7 @@ from app.core.redis import cache
 from app.core.exceptions import DomainException
 from app.services.init_db import init_database
 from app.api.v1.api import api_router
+from app.api.v1.endpoints import health
 
 # Setup logging
 logging.basicConfig(
@@ -59,9 +61,11 @@ app.add_middleware(
     expose_headers=["X-Instance-ID"],
 )
 
-# Stateless Node Identification Middleware (Lab 2)
+# Stateless Node Identification Middleware (Lab 2) + synthetic latency (Lab 3)
 @app.middleware("http")
 async def add_instance_id_header(request: Request, call_next):
+    if settings.ARTIFICIAL_DELAY_MS:  # "повільний" вузол для експерименту з асиметричним навантаженням
+        await asyncio.sleep(settings.ARTIFICIAL_DELAY_MS / 1000)
     response = await call_next(request)
     response.headers["X-Instance-ID"] = settings.INSTANCE_ID
     return response
@@ -76,6 +80,8 @@ async def domain_exception_handler(request: Request, exc: DomainException):
 
 # Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+# Lab 3: GET /health — той самий health check за коротким шляхом
+app.include_router(health.router, prefix="/health", include_in_schema=False)
 
 # Static files and UI
 static_dir = Path(__file__).resolve().parent / "static"

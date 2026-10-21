@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     
     # Instance identification for stateless multi-node scaling (Lab 2)
     INSTANCE_ID: str = os.getenv("INSTANCE_ID", "backend-local")
+
+    # Lab 3: штучна затримка кожного запиту (мс) — імітація "повільного" вузла
+    ARTIFICIAL_DELAY_MS: int = 0
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
