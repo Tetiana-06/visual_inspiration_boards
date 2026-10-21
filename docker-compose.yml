@@ -19,13 +19,16 @@ services:
     networks:
       - backend_net
 
-  # Centralized In-memory Cache (shared by all replicas)
+  # Lab 4: Distributed Cache — один Redis, спільний для всіх реплік
   redis:
     image: redis:7-alpine
     container_name: vib_redis
     restart: unless-stopped
-    volumes:
-      - redis_data:/data
+    # Ліміт пам'яті 64 МБ; коли він заповнений — витісняються найдавніше використані ключі (LRU).
+    # --save "" вимикає збереження на диск: після рестарту кеш порожній і не віддасть застарілих даних.
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    tmpfs:
+      - /data   # жодних файлів кешу на диску між рестартами
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -88,7 +91,7 @@ services:
     networks:
       - backend_net
 
-  # ---------- Single Entry Point: єдиний сервіс з опублікованим портом ----------
+  # Single Entry Point: єдиний сервіс з опублікованим портом
   nginx:
     image: nginx:1.28-alpine
     container_name: vib_nginx
@@ -112,4 +115,3 @@ networks:
 
 volumes:
   postgres_data:
-  redis_data:

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -36,10 +36,13 @@ async def create_board(
 @router.get("/{board_id}", response_model=BoardDetailRead, summary="Отримати детальну інформацію про дошку")
 async def get_board(
     board_id: int,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    """Повертає повні дані дошки разом із усіма елементами канвасу та списком співавторів."""
-    return await BoardService.get_board_by_id(db=db, board_id=board_id)
+    """Повертає повні дані дошки разом із усіма елементами канвасу та списком співавторів (Cache-Aside, Lab 4)."""
+    data, cache_status = await BoardService.get_board_detail_cached(db=db, board_id=board_id)
+    response.headers["X-Cache"] = cache_status  # HIT — з Redis, MISS — з БД
+    return data
 
 
 @router.patch("/{board_id}", response_model=BoardDetailRead, summary="Оновити параметри дошки (Optimistic Locking)")

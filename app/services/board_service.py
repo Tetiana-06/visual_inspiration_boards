@@ -7,9 +7,10 @@ from sqlalchemy.orm import selectinload
 from app.models.board import Board
 from app.models.collaborator import BoardCollaborator
 from app.models.canvas_element import CanvasElement
-from app.schemas.board import BoardCreate, BoardUpdate
+from app.schemas.board import BoardCreate, BoardUpdate, BoardDetailRead
 from app.core.exceptions import NotFoundError, ConcurrencyConflictError
-from app.core.redis import cache
+from app.core.config import settings
+from app.core.redis import cache, board_cache_key
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,22 @@ class BoardService:
         return board
 
     @staticmethod
+    async def get_board_detail_cached(db: AsyncSession, board_id: int) -> tuple[dict, str]:
+        """Lab 4: Cache-Aside. Повертає (дані дошки, "HIT" | "MISS")."""
+        key = board_cache_key(board_id)
+        cached = await cache.get_json(key)  # 1. Key Lookup
+        if cached is not None:
+            logger.info(f"CACHE HIT {key}")
+            return cached, "HIT"  # 2. Cache Hit: без звернення до БД
+
+        # 3. Cache Miss: читаємо з БД, кладемо в кеш з TTL, повертаємо
+        board = await BoardService.get_board_by_id(db, board_id)
+        data = BoardDetailRead.model_validate(board).model_dump(mode="json")
+        await cache.set_json(key, data, ttl=settings.BOARD_CACHE_TTL)
+        logger.info(f"CACHE MISS {key}")
+        return data, "MISS"
+
+    @staticmethod
     async def create_board(db: AsyncSession, board_in: BoardCreate) -> Board:
         board = Board(
             title=board_in.title,
@@ -120,7 +137,7 @@ class BoardService:
         await db.refresh(board)
 
         # Invalidate cache
-        await cache.delete(f"board:{board_id}")
+        await cache.delete(board_cache_key(board_id))
         return await BoardService.get_board_by_id(db, board.id)
 
     @staticmethod
@@ -128,7 +145,7 @@ class BoardService:
         board = await BoardService.get_board_by_id(db, board_id)
         await db.delete(board)
         await db.commit()
-        await cache.delete(f"board:{board_id}")
+        await cache.delete(board_cache_key(board_id))
         return True
 
     @staticmethod

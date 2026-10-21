@@ -58,7 +58,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Instance-ID"],
+    expose_headers=["X-Instance-ID", "X-Cache"],
 )
 
 # Stateless Node Identification Middleware (Lab 2) + synthetic latency (Lab 3)
