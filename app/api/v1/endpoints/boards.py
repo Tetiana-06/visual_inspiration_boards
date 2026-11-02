@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import get_db, get_read_db
 from app.schemas.board import BoardCreate, BoardUpdate, BoardRead, BoardDetailRead
 from app.schemas.common import BoardExportResponse
 from app.services.board_service import BoardService
@@ -16,7 +16,7 @@ async def get_boards(
     limit: int = Query(50, ge=1, le=100, description="Пагінація: ліміт записів"),
     owner_id: Optional[int] = Query(None, description="Фільтр за ID власника"),
     search: Optional[str] = Query(None, description="Пошук за назвою дошки"),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),  # Lab 6: Eventual — публічний каталог, читаємо з Replica
 ):
     """Повертає список дощок користувачів із кількістю елементів та параметрами оформлення."""
     return await BoardService.get_boards(
@@ -37,7 +37,7 @@ async def create_board(
 async def get_board(
     board_id: int,
     response: Response,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db),  # Lab 6: Strict — редактор дошки, потрібна свіжа version (Optimistic Locking)
 ):
     """Повертає повні дані дошки разом із усіма елементами канвасу та списком співавторів (Cache-Aside, Lab 4)."""
     data, cache_status = await BoardService.get_board_detail_cached(db=db, board_id=board_id)
@@ -71,7 +71,7 @@ async def delete_board(
 @router.get("/{board_id}/export", response_model=BoardExportResponse, summary="Експорт дошки та елементів (High-Load Scenario)")
 async def export_board(
     board_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_read_db),  # Lab 6: Eventual — звіт/експорт, читаємо з Replica
 ):
     """
     Генерує повний агрегований знімок дошки для експорту або архівації.

@@ -1,0 +1,25 @@
+﻿
+== A_read_3inst docker stats @ ~vu_100/200
+vib_backend_3 99.46% 68.84MiB / 512MiB
+vib_backend_2 99.48% 68.59MiB / 512MiB
+vib_backend_1 99.49% 68.83MiB / 512MiB
+vib_postgres 22.05% 48.88MiB / 1GiB
+vib_redis 6.70% 3.875MiB / 7.467GiB
+vib_nginx 35.51% 18.22MiB / 7.467GiB
+== A_read_3inst DB transactions: 41049
+== B_write_3inst docker stats @ ~vu_100/200
+vib_backend_3 99.92% 71.18MiB / 512MiB
+vib_backend_2 99.26% 71.05MiB / 512MiB
+vib_backend_1 99.54% 71.52MiB / 512MiB
+vib_postgres 74.13% 124.8MiB / 1GiB
+vib_redis 3.16% 3.797MiB / 7.467GiB
+vib_nginx 13.72% 17.37MiB / 7.467GiB
+== B_write_3inst DB transactions: 160842
+== C_workflow_3inst docker stats @ ~vu_100/200
+vib_backend_3 100.23% 84.53MiB / 512MiB
+vib_backend_2 100.14% 83.27MiB / 512MiB
+vib_backend_1 100.14% 82.04MiB / 512MiB
+vib_postgres 55.23% 141.8MiB / 1GiB
+vib_redis 2.83% 3.961MiB / 7.467GiB
+vib_nginx 13.50% 18.16MiB / 7.467GiB
+== C_workflow_3inst DB transactions: 111261

@@ -4,6 +4,8 @@
 > **Лабораторна робота № 2**: Архітектура без стану (*Stateless Application Architecture*) та винесення стану системи (мульти-екземплярне розгортання, Round-Robin, `X-Instance-ID`, тестування стійкості).  
 > **Лабораторна робота № 3**: Горизонтальне масштабування (*Horizontal Scaling*) та балансування навантаження (*Load Balancing*) — звіт у розділі [Лабораторна робота № 3](#лабораторна-робота--3-горизонтальне-масштабування-та-балансування-навантаження).  
 > **Лабораторна робота № 4**: Розподілене кешування (*Distributed Caching*, Redis, Cache-Aside, інвалідація, fallback) — звіт у розділі [Лабораторна робота № 4](#лабораторна-робота--4-розподілене-кешування-та-узгодженість-даних).  
+> **Лабораторна робота № 5**: Навантажувальне тестування (*Load & Performance Baseline*, k6) — звіт у [`REPORT_LAB5.md`](REPORT_LAB5.md), скрипти в [`load-tests/`](load-tests/).  
+> **Лабораторна робота № 6**: Реплікація БД (*PostgreSQL Primary → Replica*), Read/Write Separation, Replication Lag, Read-After-Write (Sticky Routing), Read-Only Mode — звіт у [`REPORT_LAB6.md`](REPORT_LAB6.md).  
 > **Естетика та інтерфейс:** Tiffany & Co. Aesthetic / Pinterest Vibe — бірюзові акценти `#0ABAB5`, стікери-нотатки, кольорові палітри, інтерактивний 2D-канвас із гострими кутами та підтримкою drag-and-drop.
 
 ---
@@ -95,6 +97,11 @@ python scripts/verify_cluster.py http://localhost:8080
 | [`scripts/cache_demo.py`](file:///C:/Users/Tetiana/PycharmProjects/visual_inspiration_boards/scripts/cache_demo.py) | Lab 4: демонстрація Cache Hit/Miss, інвалідації та заміри Cold vs Hot. |
 | [`scripts/lb_test.py`](file:///C:/Users/Tetiana/PycharmProjects/visual_inspiration_boards/scripts/lb_test.py) | Lab 3: навантажувальний тест через балансувальник (розподіл по Instance-ID, req/s, p50/p99, помилки). |
 | [`REPORT_LAB1.md`](file:///C:/Users/Tetiana/PycharmProjects/visual_inspiration_boards/REPORT_LAB1.md) | Звіт з Лабораторної роботи №1 (System Design & MVP). |
+| [`load-tests/`](load-tests/) | Lab 5: k6-сценарії A/B/C (`scenario_*.js`), профіль навантаження (`lib.js`), серія тестів (`run_all.ps1`), результати (`results/`). |
+| [`REPORT_LAB5.md`](REPORT_LAB5.md) | **Звіт з Лабораторної роботи №5 (Load Testing & Performance Baseline).** |
+| [`docker/postgres/`](docker/postgres/) | Lab 6: налаштування реплікації (користувач `replicator`, `pg_hba.conf`). |
+| [`scripts/replication_demo.py`](scripts/replication_demo.py) | Lab 6: демонстрація Stale Read та Read-After-Write (Sticky Routing). |
+| [`REPORT_LAB6.md`](REPORT_LAB6.md) | **Звіт з Лабораторної роботи №6 (Database Replication & Read/Write Separation).** |
 | [`REPORT_LAB2.md`](file:///C:/Users/Tetiana/PycharmProjects/visual_inspiration_boards/REPORT_LAB2.md) | **Звіт з Лабораторної роботи №2 (Stateless Architecture & Resilience).** |
 
 ---

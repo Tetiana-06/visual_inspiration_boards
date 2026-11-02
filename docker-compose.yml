@@ -1,21 +1,75 @@
 # Lab 3: client ──► nginx:8080 ──► backend-1 | backend-2 | backend-3 ──► postgres, redis
+# Lab 6: backend ──write/strict read──► db-primary ──WAL──► db-replica ◄──eventual read── backend
 services:
-  # Primary Relational DBMS with JSONB support & disk persistence (shared by all replicas)
-  postgres:
+  # ---------- Lab 6: реплікація PostgreSQL (Primary -> Replica, асинхронна, через WAL) ----------
+  # Primary: приймає ВСІ записи (INSERT/UPDATE/DELETE/DDL) і критичні читання.
+  db-primary:
     image: postgres:16-alpine
-    container_name: vib_postgres
+    container_name: database_primary
+    cpus: 2          # Lab 5: ліміт ресурсів БД
+    mem_limit: 1g
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: visual_boards
+    command:
+      - postgres
+      - -c
+      - wal_level=replica          # у WAL пишеться достатньо даних для репліки
+      - -c
+      - max_wal_senders=5          # скільки реплік можуть одночасно читати WAL
+      - -c
+      - wal_keep_size=256MB        # запас WAL, якщо репліка тимчасово відстала/зупинена
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf   # дозвіл підключення користувачу replicator
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/primary-init.sql:/docker-entrypoint-initdb.d/primary-init.sql:ro  # створює replicator
+      - ./docker/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d visual_boards"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - backend_net
+
+  # Replica: Read-Only копія. При першому старті копіює Primary (pg_basebackup),
+  # далі постійно отримує та відтворює WAL (streaming replication).
+  db-replica:
+    image: postgres:16-alpine
+    container_name: database_replica
+    cpus: 2
+    mem_limit: 1g
+    restart: unless-stopped
+    user: postgres
+    environment:
+      PGPASSWORD: replicator       # пароль для pg_basebackup
+      # Штучна затримка застосування WAL для демонстрації Replication Lag:
+      #   $env:REPLICA_LAG="5s"; docker compose up -d db-replica
+      REPLICA_LAG: ${REPLICA_LAG:-0}
+    entrypoint:
+      - sh
+      - -c
+      - |
+        if [ ! -s "$$PGDATA/PG_VERSION" ]; then
+          echo "Replica: копіюю дані з Primary (pg_basebackup)..."
+          until pg_basebackup -h db-primary -U replicator -D "$$PGDATA" -X stream -R; do sleep 2; done
+          chmod 0700 "$$PGDATA"
+        fi
+        # -R створив standby.signal + primary_conninfo => сервер стартує як Read-Only репліка
+        exec postgres -c hot_standby=on -c recovery_min_apply_delay=$$REPLICA_LAG
+    volumes:
+      - replica_data:/var/lib/postgresql/data
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d visual_boards"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - backend_net
 
@@ -44,13 +98,20 @@ services:
       dockerfile: docker/Dockerfile
     image: visual_inspiration_boards-backend
     container_name: vib_backend_1
+    cpus: 1          # Lab 5: ліміт ресурсів інстансу
+    mem_limit: 512m
     restart: unless-stopped
     environment:
       - INSTANCE_ID=backend-instance-1
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/visual_boards
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-primary:5432/visual_boards
+      - DATABASE_REPLICA_URL=postgresql+asyncpg://postgres:postgres@db-replica:5432/visual_boards  # Lab 6
+      - USE_REPLICA=${USE_REPLICA:-true}   # Lab 6: false => Single Primary Topology (усе на Primary)
       - REDIS_URL=redis://redis:6379/0
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}   # Lab 5: REDIS_ENABLED=false => Cache Disabled
     depends_on:
-      postgres:
+      db-primary:
+        condition: service_healthy
+      db-replica:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -62,11 +123,16 @@ services:
   backend-2:
     image: visual_inspiration_boards-backend
     container_name: vib_backend_2
+    cpus: 1          # Lab 5: ліміт ресурсів інстансу
+    mem_limit: 512m
     restart: unless-stopped
     environment:
       - INSTANCE_ID=backend-instance-2
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/visual_boards
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-primary:5432/visual_boards
+      - DATABASE_REPLICA_URL=postgresql+asyncpg://postgres:postgres@db-replica:5432/visual_boards  # Lab 6
+      - USE_REPLICA=${USE_REPLICA:-true}   # Lab 6: false => Single Primary Topology (усе на Primary)
       - REDIS_URL=redis://redis:6379/0
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}   # Lab 5: REDIS_ENABLED=false => Cache Disabled
     depends_on:
       - backend-1   # чекаємо, поки backend-1 збере образ
     volumes:
@@ -77,11 +143,16 @@ services:
   backend-3:
     image: visual_inspiration_boards-backend
     container_name: vib_backend_3
+    cpus: 1          # Lab 5: ліміт ресурсів інстансу
+    mem_limit: 512m
     restart: unless-stopped
     environment:
       - INSTANCE_ID=backend-instance-3
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/visual_boards
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-primary:5432/visual_boards
+      - DATABASE_REPLICA_URL=postgresql+asyncpg://postgres:postgres@db-replica:5432/visual_boards  # Lab 6
+      - USE_REPLICA=${USE_REPLICA:-true}   # Lab 6: false => Single Primary Topology (усе на Primary)
       - REDIS_URL=redis://redis:6379/0
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}   # Lab 5: REDIS_ENABLED=false => Cache Disabled
       # Експеримент з асиметричним навантаженням: BACKEND_3_DELAY_MS=200 docker compose up -d backend-3
       - ARTIFICIAL_DELAY_MS=${BACKEND_3_DELAY_MS:-0}
     depends_on:
@@ -114,4 +185,5 @@ networks:
     internal: true  # без виходу назовні і без публікації портів
 
 volumes:
-  postgres_data:
+  postgres_data:   # дані Primary
+  replica_data:    # дані Replica (окремий диск — це окремий сервер БД)

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
+from app.core.database import STICKY_COOKIE
 from app.core.redis import cache
 from app.core.exceptions import DomainException
 from app.services.init_db import init_database
@@ -58,7 +59,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Instance-ID", "X-Cache"],
+    expose_headers=["X-Instance-ID", "X-Cache", "X-DB-Node"],
 )
 
 # Stateless Node Identification Middleware (Lab 2) + synthetic latency (Lab 3)
@@ -68,6 +69,11 @@ async def add_instance_id_header(request: Request, call_next):
         await asyncio.sleep(settings.ARTIFICIAL_DELAY_MS / 1000)
     response = await call_next(request)
     response.headers["X-Instance-ID"] = settings.INSTANCE_ID
+    # Lab 6: Session Sticky Routing. Після успішного запису клієнт отримує cookie на STICKY_TTL_SEC секунд.
+    # Поки cookie живе, get_read_db читає з Primary => користувач одразу бачить свої зміни.
+    # Стан живе у клієнта (cookie), тож це працює на будь-якому з 3 stateless-інстансів.
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and response.status_code < 400:
+        response.set_cookie(STICKY_COOKIE, "1", max_age=settings.STICKY_TTL_SEC, httponly=True)
     return response
 
 # Custom domain exception handler

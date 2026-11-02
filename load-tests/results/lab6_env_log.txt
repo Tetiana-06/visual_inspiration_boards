@@ -1,0 +1,18 @@
+﻿
+== D_single docker stats @ ~vu_100/200
+vib_backend_3 98.87% 69.63MiB / 512MiB
+vib_backend_2 99.17% 70.06MiB / 512MiB
+vib_backend_1 98.41% 70.3MiB / 512MiB
+database_replica 0.00% 20.88MiB / 1GiB
+database_primary 51.77% 120.9MiB / 1GiB
+vib_redis 0.36% 6.598MiB / 7.467GiB
+vib_nginx 18.53% 19.49MiB / 7.467GiB
+== D_replica docker stats @ ~vu_100/200
+vib_backend_3 100.18% 70.34MiB / 512MiB
+vib_backend_2 100.10% 69.7MiB / 512MiB
+vib_backend_1 100.19% 70.35MiB / 512MiB
+database_replica 53.92% 117.7MiB / 1GiB
+database_primary 0.00% 29.75MiB / 1GiB
+vib_redis 3.34% 6.602MiB / 7.467GiB
+vib_nginx 19.56% 19.21MiB / 7.467GiB
+DONE

@@ -10,6 +10,7 @@ class HealthResponse(BaseModel):
     version: str
     instance_id: str
     database: str
+    replica: str = "disabled"  # Lab 6: стан Read-Replica
     redis: str
     timestamp: datetime
 
