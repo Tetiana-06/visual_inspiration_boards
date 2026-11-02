@@ -15,6 +15,12 @@ class Settings(BaseSettings):
         "DATABASE_URL", 
         "postgresql+asyncpg://postgres:postgres@localhost:5432/visual_boards"
     )
+    # Lab 6: Read-Replica. Порожній рядок або USE_REPLICA=false => усе читається з Primary
+    DATABASE_REPLICA_URL: str = ""
+    USE_REPLICA: bool = True
+    # Lab 6: Session Sticky Routing — скільки секунд після запису читати з Primary
+    STICKY_TTL_SEC: int = 5
+
     # Fallback to SQLite if PostgreSQL is not available locally for offline testing
     SQLITE_FALLBACK_URL: str = "sqlite+aiosqlite:///./visual_boards.db"
     
@@ -27,6 +33,9 @@ class Settings(BaseSettings):
 
     # Lab 3: штучна затримка кожного запиту (мс) — імітація "повільного" вузла
     ARTIFICIAL_DELAY_MS: int = 0
+
+    # Lab 4: TTL кешу деталей дошки (с). Свіжість гарантує інвалідація, TTL — страховка
+    BOARD_CACHE_TTL: int = 300
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
